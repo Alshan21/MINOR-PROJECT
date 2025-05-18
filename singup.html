@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sign Up - Squat Posture Analyzer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="form-container">
+        <h2>Sign Up</h2>
+        <form id="signupForm">
+            <label for="name">Full Name</label>
+            <input type="text" id="name" name="name" required>
+            
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email" required>
+            
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required>
+            
+            <label for="confirm_password">Confirm Password</label>
+            <input type="password" id="confirm_password" name="confirm_password" required>
+            
+            <button class="btn" type="submit">Create Account</button>
+        </form>
+        <p>Already have an account? <a href="login.html">Login here</a></p>
+    </div>
+<script>
+document.getElementById('signupForm').onsubmit = async function(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    const password = formData.get('password');
+    const confirmPassword = formData.get('confirm_password');
+    if (password !== confirmPassword) {
+        alert("Passwords do not match!");
+        return;
+    }
+    try {
+        const response = await fetch('http://localhost:5000/api/signup', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+        if (data.success) {
+            // Automatically log in after signup
+            const loginData = new FormData();
+            loginData.append('email', formData.get('email'));
+            loginData.append('password', formData.get('password'));
+            const loginResponse = await fetch('http://localhost:5000/api/login', {
+                method: 'POST',
+                body: loginData
+            });
+            const loginResult = await loginResponse.json();
+            if (loginResult.success && loginResult.token) {
+                alert('Account created! Redirecting to exercise page...');
+                localStorage.setItem('sessionToken', loginResult.token);
+                window.location.href = 'exercise.html';
+            } else {
+                alert('Signup succeeded but auto-login failed. Please log in manually.');
+                window.location.href = 'login.html';
+            }
+        } else {
+            alert(data.message || "Signup failed.");
+        }
+    } catch (err) {
+        alert("An error occurred. Please try again later.");
+    }
+};
+</script>
+</body>
+</html>
